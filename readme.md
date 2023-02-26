@@ -2,6 +2,13 @@
 
 Top.gg Voter is a simple desktop app that allows you to vote for your favorite Discord bots on Top.gg.
 
+## Features
+
+-   Vote for multiple bots at once
+-   Multiples accounts support (cookies)
+-   Bypass hcaptcha using [hektCaptcha-extension](https://github.com/Wikidepia/hektCaptcha-extension)
+-   Block ads using [uBlock Origin](https://github.com/gorhill/uBlock)
+
 ## Requirements
 
 -   [Windows 10](https://www.microsoft.com/en-us/software-download/windows10)
