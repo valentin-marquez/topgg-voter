@@ -113,7 +113,7 @@ def main(page: ft.Page):
                             [
                                 ft.Text("v1.0.0", text_align=ft.TextAlign.RIGHT,
                                         color="white", font_family="Manrope-Regular", size=12),
-                                ft.Text("by: @tulio#1074", text_align=ft.TextAlign.RIGHT,
+                                ft.Text("by: @Nozz#4282", text_align=ft.TextAlign.RIGHT,
                                         color="white", font_family="Manrope-Regular", size=12),
                             ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER
                         )
