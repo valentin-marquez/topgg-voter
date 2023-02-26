@@ -1,10 +1,6 @@
-@REM activate the virtual environment and run the src/main.py script
-@REM with the arguments passed to this script
-
 @echo off
 setlocal
 
-@REM check if python 3.9 is installed
 python --version > nul 2>&1
 if errorlevel 1 (
     echo Python 3.9 is not installed.
@@ -29,7 +25,6 @@ call %VENV_ACTIVATE%
 echo Installing dependencies...
 %VENV_PIP% install -r requirements.txt
 
-@REM pass all arguments to the python script
 echo Building...
 
-call flet pack launcher.py -i "./assets/icons/favicon.png" --add-data "assets;assets" -n "Top.gg Voter" --product-name "Top.gg Voter" --product-version "1.0"
+call flet pack launcher.py -i "./assets/icons/favicon.png" --add-data "assets;assets" -n "Top.gg Voter" --product-name "Top.gg Voter" --product-version "1.0" -D
