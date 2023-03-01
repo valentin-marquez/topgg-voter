@@ -26,9 +26,10 @@ Top.gg Voter is a simple desktop app that allows you to vote for your favorite D
 2. Enter your cookies in the `Cookies` field (see [How to get cookies](#how-to-get-cookies))
 3. Click `Vote` to start the voting process
 4. Now you can minimize the app and it will continue to vote for you in the background, you can close from the tray icon.
-5. [INFO] You can add all the cookies you want. 
-6. [INFO] The app check each 1 hour if you have to vote again.
-7. [INFO] In the first run the app create a shortcut in the startup folder, so you don't need to open the app every time you turn on your pc.
+5. [INFO] if you want to add multiple accounts you must use incognito mode, since the account cookie is deleted when you log out or switch to another account. You should also keep in mind that cookies last for 30 days stored in top.gg
+6. [INFO] You can add all the cookies you want. 
+7. [INFO] The app check each 1 hour if you have to vote again.
+8. [INFO] In the first run the app create a shortcut in the startup folder, so you don't need to open the app every time you turn on your pc.
 ## How to get cookies
 
 1. Open Google Chrome
