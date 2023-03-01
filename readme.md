@@ -34,7 +34,7 @@ Top.gg Voter is a simple desktop app that allows you to vote for your favorite D
 1. Open Google Chrome
 2. Install the [EditThisCookie](https://chrome.google.com/webstore/detail/editthiscookie/fngmhnnpilhplaeedifhccceomclgfbg) extension (if you don't know how to get cookies)
 3. go to [top.gg](https://top.gg/) and login
-4. before open the EditThisCookie extension and copy the `connect.sid` cookie value
+4. After open the EditThisCookie extension and copy the `connect.sid` cookie value
 5. Congrats, you now have your cookies!
 
 
