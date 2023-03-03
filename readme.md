@@ -2,6 +2,8 @@
 
 Top.gg Voter is a simple desktop app that allows you to vote for your favorite Discord bots on Top.gg.
 
+[![Github All Releases](https://img.shields.io/github/downloads/nozzOne/topgg-voter/total.svg)]()
+
 ## Features
 
 -   Vote for multiple bots at once
