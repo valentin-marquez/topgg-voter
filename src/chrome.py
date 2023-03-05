@@ -13,21 +13,21 @@ from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from src.util import (Browser, get_browser, get_chrome_version,
-                                  resource_path, logger)
+from src.util import REG, Browser, decrypt_cookie, logger, resource_path
 
 
 class Chrome:
-    def __init__(self, headless, browser, bots: list, cookies: list):
+    def __init__(self, headless, browser: Browser, bots: list, cookies: list):
         self.headless = headless
         self.bots = bots
         self.cookies = cookies
         self.browser = browser
         self.driver = uc.Chrome(options=self._options(),
-                                desired_capabilities=self._capbilities(), 
-                                use_subprocess=True, 
-                                browser_executable_path=get_browser(self.browser), 
-                                version_main=get_chrome_version(),
+                                desired_capabilities=self._capbilities(),
+                                use_subprocess=True,
+                                browser_executable_path=REG.get_browser(
+                                    self.browser),
+                                version_main=REG.get_chrome_version(),
                                 service_creationflags=CREATE_NO_WINDOW)
         self.ignored_exceptions = (
             NoSuchElementException, StaleElementReferenceException)
@@ -54,7 +54,7 @@ class Chrome:
         ublock = resource_path("./assets/extensions/ublock/")
 
         options = uc.ChromeOptions()
-        options.binary_location = get_browser(self.browser)
+        options.binary_location = REG.get_browser(self.browser)
         options.add_argument("--disable-popup-blocking")
         options.add_argument("--lang=en-US")
         options.add_argument(f"--load-extension={ublock},{anticaptcha}")
@@ -121,6 +121,7 @@ class Chrome:
 
     def run(self):
         for cookie in self.cookies:
+            cookie = decrypt_cookie(cookie)
             self.driver.get("https://top.gg")
             self.driver.add_cookie(
                 {
@@ -136,7 +137,3 @@ class Chrome:
 
     def kill(self):
         self.driver.quit()
-
-
-if __name__ == "__main__":
-    Chrome(True, Browser.CHROME).run()

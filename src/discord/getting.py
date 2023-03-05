@@ -2,6 +2,7 @@ import requests
 
 from src.util import logger
 
+
 class Bot:
     def __init__(self, id: int, name: str, icon: str, is_bot: bool) -> None:
         self.id = id

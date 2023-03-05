@@ -1,13 +1,15 @@
 import os
 import sys
+from secrets import token_hex
 
 import flet as ft
 from win32com.client import Dispatch
 
 from src.main import main
-from src.util.file_routes import resource_path
+from src.util.routes import resource_path
 
-VERSION = "v1.0.0"
+os.environ["VERSION"] = "v1.1.0"
+os.environ["SECRET"] = token_hex(32)
 
 if __name__ == "__main__":
 

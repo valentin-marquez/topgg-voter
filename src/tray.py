@@ -1,7 +1,7 @@
 import pystray
 from PIL import Image
 
-from src.util.file_routes import resource_path
+from src.util.routes import resource_path
 
 
 class Tray(pystray.Icon):

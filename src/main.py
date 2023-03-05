@@ -2,13 +2,13 @@
 
 import flet as ft
 import pystray
-from apscheduler.schedulers.background import BackgroundScheduler
 
-from src import App, Tray
-from src.util import resource_path, WindowEventType
+from src import App, Background, Tray
+from src.util import WindowEventType, resource_path
 
 p: ft.Page
 voter = App()
+scheduler = Background()
 
 
 def exit_app(icon, query):
@@ -16,6 +16,7 @@ def exit_app(icon, query):
     voter.on_close()
     p.window_destroy()
     p.window_close()
+
 
 def open_app(icon, query):
     tray.visible = False
@@ -37,6 +38,7 @@ menu = pystray.Menu(
 )
 tray = Tray(menu=menu)
 
+
 def on_window_event(e: ft.ControlEvent):
     if e.data == WindowEventType.MINIMIZE:
         tray.visible = True
@@ -56,13 +58,11 @@ def on_window_event(e: ft.ControlEvent):
 def main(page: ft.Page):
     global p
     p = page
-    scheduler = BackgroundScheduler()
     page.title = "Automatic Voter"
     page.window_width = 640
     page.window_height = 860
     page.window_max_height = 640
     page.window_height = 860
-    page.window_maximizable = False
     page.fonts = {
         "Manrope-Bold": resource_path("./assets/fonts/Manrope-Bold.ttf"),
         "Manrope-ExtraBold": resource_path("./assets/fonts/Manrope-ExtraBold.ttf"),
@@ -73,10 +73,8 @@ def main(page: ft.Page):
         "Manrope-SemiBold": resource_path("./assets/fonts/Manrope-SemiBold.ttf"),
     }
     page.dark_theme = ft.Theme(color_scheme_seed='#ff3366', font_family="Manrope-Regular",
-                            visual_density=ft.ThemeVisualDensity.ADAPTIVEPLATFORMDENSITY)
+                               visual_density=ft.ThemeVisualDensity.ADAPTIVEPLATFORMDENSITY)
     page.theme_mode = ft.ThemeMode.DARK
-    page.window_resizable = False
-    page.window_maximizable = False
     page.window_prevent_close = True
     page.spacing = 0
     page.padding = 0
@@ -87,13 +85,13 @@ def main(page: ft.Page):
         last_time_voted = "Never"
     voter.storage = page.client_storage
     voter.init()
-    scheduler.add_job(check_vote, 'interval', hours=1, args=[tray, None])
+    scheduler.add_job(check_vote, 'interval', minutes=1, args=[tray, None])
     widthsrc = page.width
 
     page.on_window_event = on_window_event
 
     text_last_time_voted = ft.Text(last_time_voted, text_align=ft.TextAlign.RIGHT,
-                                    color="white", font_family="Manrope-Regular", size=12)
+                                   color="white", font_family="Manrope-Regular", size=12)
     voter.last_vote = text_last_time_voted
     page.add(
         ft.ResponsiveRow([
@@ -126,7 +124,4 @@ def main(page: ft.Page):
 
     page.add(voter)
     page.update()
-    check_vote(tray, None) # check_vote
-    scheduler.start()
-    
-
+    check_vote(tray, None)  # check_vote

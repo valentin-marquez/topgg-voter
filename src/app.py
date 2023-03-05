@@ -5,8 +5,7 @@ import flet as ft
 
 from src import Chrome
 from src.discord import Bot, get_bot
-from src.util import Browser, logger
-
+from src.util import Browser, encrypt_cookie, logger
 
 
 class App(ft.UserControl):
@@ -23,7 +22,7 @@ class App(ft.UserControl):
 
         if self.storage.contains_key("cookies"):
             for cookie in self.storage.get("cookies"):
-                self.cookies.append(cookie)
+                self.cookies.append(encrypt_cookie(cookie))
 
         self.is_configured = True if self.bots and self.cookies else False
 
@@ -96,8 +95,10 @@ class App(ft.UserControl):
 
     def bots_lv(self, items: list):
 
+        
         self.bots_listview = ft.ListView(expand=1, spacing=5,
-                                         padding=10, height=200, auto_scroll=True)
+                                         padding=10, auto_scroll=True,
+                                         col={"xs": 12})
         for item in items:
             self.bots_listview.controls.append(
                 self.bot_template(item)
@@ -201,9 +202,9 @@ class App(ft.UserControl):
             return
         if not self.cookie_field.value:
             return
-        self.cookies.append(self.cookie_field.value)
+        self.cookies.append(encrypt_cookie(self.cookie_field.value))
         self.cookies_listView.controls.append(
-            self.cookie_template(self.cookie_field.value))
+            self.cookie_template(encrypt_cookie(self.cookie_field.value)))
         self.on_update()
         self.update()
 
