@@ -1,12 +1,13 @@
-
-
+"""
+Main file. This file is the entry point of the application.
+"""
 import flet as ft
 import pystray
 
 from src import App, Background, Tray
 from src.util import WindowEventType, resource_path
 
-p: ft.Page
+P: ft.Page
 voter = App()
 scheduler = Background()
 
@@ -14,21 +15,21 @@ scheduler = Background()
 def exit_app(icon, query):
     tray.stop()
     voter.on_close()
-    p.window_destroy()
-    p.window_close()
+    P.window_destroy()
+    P.window_close()
 
 
 def open_app(icon, query):
     tray.visible = False
-    p.window_skip_task_bar = False
+    P.window_skip_task_bar = False
 
-    p.window_always_on_top = True
-    p.update()
+    P.window_always_on_top = True
+    P.update()
 
 
 def check_vote(icon, query):
     if voter.is_configured:
-        voter.start(e=None)
+        voter.start()
 
 
 menu = pystray.Menu(
@@ -39,25 +40,27 @@ menu = pystray.Menu(
 tray = Tray(menu=menu)
 
 
-def on_window_event(e: ft.ControlEvent):
-    if e.data == WindowEventType.MINIMIZE:
+def on_window_event(event: ft.ControlEvent):
+    """Handle window events."""
+    if event.data == WindowEventType.MINIMIZE:
         tray.visible = True
-        p.window_skip_task_bar = True
-        p.update()
-    elif e.data == WindowEventType.RESTORE:
+        P.window_skip_task_bar = True
+        P.update()
+    elif event.data == WindowEventType.RESTORE:
         tray.visible = False
-        p.window_skip_task_bar = False
-        p.update()
-    elif e.data == WindowEventType.CLOSE:
+        P.window_skip_task_bar = False
+        P.update()
+    elif event.data == WindowEventType.CLOSE:
         tray.stop()
         voter.on_close()
-        p.window_destroy()
-        p.window_close()
+        P.window_destroy()
+        P.window_close()
 
 
 def main(page: ft.Page):
-    global p
-    p = page
+    """Main function."""
+    global P
+    P = page
     page.title = "Automatic Voter"
     page.window_width = 640
     page.window_height = 860
@@ -73,7 +76,7 @@ def main(page: ft.Page):
         "Manrope-SemiBold": resource_path("./assets/fonts/Manrope-SemiBold.ttf"),
     }
     page.dark_theme = ft.Theme(color_scheme_seed='#ff3366', font_family="Manrope-Regular",
-                               visual_density=ft.ThemeVisualDensity.ADAPTIVEPLATFORMDENSITY)
+                            visual_density=ft.ThemeVisualDensity.ADAPTIVEPLATFORMDENSITY)
     page.theme_mode = ft.ThemeMode.DARK
     page.window_prevent_close = True
     page.spacing = 0
@@ -91,7 +94,7 @@ def main(page: ft.Page):
     page.on_window_event = on_window_event
 
     text_last_time_voted = ft.Text(last_time_voted, text_align=ft.TextAlign.RIGHT,
-                                   color="white", font_family="Manrope-Regular", size=12)
+                                color="white", font_family="Manrope-Regular", size=12)
     voter.last_vote = text_last_time_voted
     page.add(
         ft.ResponsiveRow([
@@ -105,7 +108,7 @@ def main(page: ft.Page):
                                     color="white", font_family="Manrope-Regular", size=12),
                             text_last_time_voted,
                         ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-                        ft.Text("Top.gg Voter", text_align=ft.TextAlign.RIGHT,
+                        ft.Text("ToP.gg Voter", text_align=ft.TextAlign.RIGHT,
                                 color="white", font_family="Manrope-SemiBold", size=32),
                         ft.Column(
                             [

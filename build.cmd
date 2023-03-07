@@ -18,6 +18,8 @@ if not exist "%VENV_DIR%" (
     python -m venv %VENV_DIR%
 )
 
+echo patching undetected_chromedriver > __init__.py 
+copy assets/patch/__init__.py venv/Lib/site-packages/undetected_chromedriver/__init__.py
 
 echo Activating virtual environment...
 call %VENV_ACTIVATE%

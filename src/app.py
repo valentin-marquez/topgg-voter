@@ -1,3 +1,4 @@
+"""module for string operations"""
 import string
 from datetime import datetime
 
@@ -9,13 +10,30 @@ from src.util import Browser, encrypt_cookie, logger
 
 
 class App(ft.UserControl):
+    """
+    Main app
+    """
+
     def __init__(self):
         super().__init__()
         self.storage = None
         self.last_vote = None
         self.chromes: list[Chrome] = []
+        self.bots: list[Bot] = []
+        self.cookies = []
+        self.is_configured = False
+
+        # Components
+        self.bots_listview = None
+        self.cookies_listview = None
+        self.start_btn = None
+        self.bot_field = None
+        self.cookie_field = None
 
     def init(self):
+        """
+        Init the app
+        """
         self.bots = [get_bot(id) for id in self.storage.get(
             "bots")] if self.storage.contains_key("bots") else []
         self.cookies = []
@@ -23,7 +41,6 @@ class App(ft.UserControl):
         if self.storage.contains_key("cookies"):
             for cookie in self.storage.get("cookies"):
                 self.cookies.append(encrypt_cookie(cookie))
-
         self.is_configured = True if self.bots and self.cookies else False
 
     def build(self):
@@ -45,8 +62,11 @@ class App(ft.UserControl):
             padding=15
         )
 
-    def start(self, e):
-        if self.bots and self.cookies:
+    def start(self):
+        """
+        Start the bot
+        """
+        if self.bots and self.cookies and not self.chromes:
             self.start_btn.content.content.text = "STARTED..."
             self.start_btn.disabled = True
             self.update()
@@ -65,6 +85,10 @@ class App(ft.UserControl):
             logger.error("No bots or cookies selected")
 
     def start_button(self) -> ft.Card:
+        """Return a component with a button to start the bot
+        Returns:
+            ft.Card: A material design card
+        """
         self.start_btn = self.add_container(ft.TextButton(
             "VOTE", on_click=self.start, expand=1, height=40, width=100))
         if self.is_configured:
@@ -73,13 +97,23 @@ class App(ft.UserControl):
         return self.start_btn
 
     def remove_bot(self, sender: ft.ControlEvent):
+        """Remove a bot from the list
+
+        Args:
+            sender (ft.ControlEvent): Class that contains the control that triggered the event
+        """
         self.bots_listview.controls.pop(
             self.bots.index(sender.control.data))
         self.bots.remove(sender.control.data)
         self.on_update()
         self.update()
 
-    def add_bot(self, sender: ft.ControlEvent):
+    def add_bot(self, event: ft.ControlEvent):
+        """Add a bot to the list
+
+        Args:
+            sender (ft.ControlEvent): Class that contains the control that triggered the event
+        """
         try:
 
             if self.bot_field.value not in self.bots and self.bot_field.value != "":
@@ -88,42 +122,56 @@ class App(ft.UserControl):
                 self.bots_listview.controls.append(self.bot_template(bot))
                 self.on_update()
                 self.update()
-        except ValueError as e:
-            logger.error(e)
-        except AttributeError as e:
-            logger.error(e)
+        except ValueError as error:
+            logger.error(error)
+        except AttributeError as error:
+            logger.error(error)
 
     def bots_lv(self, items: list):
+        """
 
-        
+        Args:
+            items (list): _description_
+
+        Returns:
+            _type_: _description_
+        """
         self.bots_listview = ft.ListView(expand=1, spacing=5,
-                                         padding=10, auto_scroll=True,
-                                         col={"xs": 12})
+                                        padding=10, auto_scroll=True,
+                                        col={"xs": 12})
         for item in items:
             self.bots_listview.controls.append(
                 self.bot_template(item)
             )
         return self.bots_listview
 
-    def bot_template(self, item: Bot):
+    def bot_template(self, item: Bot) -> ft.ResponsiveRow:
+        """View of bot information in the list
+
+        Args:
+            item (Bot): Bot Object
+
+        Returns:
+            ft.ResponsiveRow: Responsive row with the bot information
+        """
         return ft.ResponsiveRow(
             col={"xs": 12},
             controls=[
                 ft.Column(
                     controls=[
                         ft.Image(src=item.icon,
-                                 fit=ft.ImageFit.COVER,
-                                 col={"xs": 3},
-                                 border_radius=10),
+                                fit=ft.ImageFit.COVER,
+                                col={"xs": 3},
+                                border_radius=10),
                     ],
                     col={"xs": 2},
                 ),
                 ft.Column(
                     controls=[
-                        ft.Text("Bot id: {}".format(
-                            item.id), weight=ft.FontWeight.W_300, size=ft.TextThemeStyle.DISPLAY_SMALL, font_family="Manrope-Medium"),
-                        ft.Text("Bot Name: {}".format(
-                            item.name), weight=ft.FontWeight.W_500, size=ft.TextThemeStyle.DISPLAY_SMALL, font_family="Manrope-Medium"),
+                        ft.Text(f"Bot id: {item.id}", weight=ft.FontWeight.W_300,
+                                size=ft.TextThemeStyle.DISPLAY_SMALL, font_family="Manrope-Medium"),
+                        ft.Text(f"Bot Name: {item.name}", weight=ft.FontWeight.W_500,
+                                size=ft.TextThemeStyle.DISPLAY_SMALL, font_family="Manrope-Medium"),
                     ],
                     col={"xs": 5},
                 ),
@@ -140,7 +188,8 @@ class App(ft.UserControl):
             ]
         )
 
-    def add_container(self, component):
+    @classmethod
+    def add_container(cls, component):
         return ft.Card(content=ft.Container(component))
 
     def bots_sections(self):
@@ -187,35 +236,57 @@ class App(ft.UserControl):
             ]
         )
 
-    def cookies_lv(self, items: list):
+    def cookies_lv(self, items: list) -> ft.ListView:
+        """Return a listview with the cookies
 
-        self.cookies_listView = ft.ListView(expand=1, spacing=5,
+        Args:
+            items (list): Cookies list
+
+        Returns:
+            ft.ListView: a listview with the cookies
+        """
+        self.cookies_listview = ft.ListView(expand=1, spacing=5,
                                             padding=10, height=150)
         for item in items:
-            self.cookies_listView.controls.append(
+            self.cookies_listview.controls.append(
                 self.cookie_template(item)
             )
-        return self.cookies_listView
+        return self.cookies_listview
 
-    def add_cookie(self, sender: ft.ControlEvent):
+    def add_cookie(self, event: ft.ControlEvent):
+        """ Add a cookie to the list
+
+        Args:
+            sender (ft.ControlEvent): Class that contains the control that triggered the event
+        """
         if self.cookie_field.value in self.cookies:
             return
         if not self.cookie_field.value:
             return
         self.cookies.append(encrypt_cookie(self.cookie_field.value))
-        self.cookies_listView.controls.append(
+        self.cookies_listview.controls.append(
             self.cookie_template(encrypt_cookie(self.cookie_field.value)))
         self.on_update()
         self.update()
 
     def remove_cookie(self, sender: ft.ControlEvent):
-        self.cookies_listView.controls.pop(
+        """Remove a cookie from the list
+
+        Args:
+            sender (ft.ControlEvent): Class that contains the control that triggered the event
+        """
+        self.cookies_listview.controls.pop(
             self.cookies.index(sender.control.data))
         self.cookies.remove(sender.control.data)
         self.on_update()
         self.update()
 
-    def cookies_sections(self):
+    def cookies_sections(self) -> ft.Column:
+        """Cookie section
+
+        Returns:
+            ft.Column: Cookie section
+        """
         self.cookie_field = ft.TextField(
             hint_text="Paste your cookie here", height=60)
 
@@ -225,25 +296,30 @@ class App(ft.UserControl):
                     controls=[
                         self.cookie_field,
                         ft.ElevatedButton(text="Add Cookie",
-                                          on_click=self.add_cookie),
+                                        on_click=self.add_cookie),
                     ]
                 )
             ]
         )
 
     def on_update(self):
+        """
+        handle the update of the data in the storage
+        """
         self.storage.set("cookies", self.cookies)
         self.storage.set("bots", [bot.id for bot in self.bots])
         self.storage.set("last_time_voted", self.last_vote.value)
 
     def on_close(self):
+        """
+        handle the close of the app
+        """
         logger.info("close services...")
         try:
             for chrome in self.chromes:
                 chrome.kill()
-        except Exception as e:
-            logger.warning("Failed to kill process: " + str(e))
-
+        except ValueError as error:
+            logger.error(error)
         logger.info("Saving changes...")
         self.storage.clear()
 

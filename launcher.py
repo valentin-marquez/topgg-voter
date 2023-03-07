@@ -1,3 +1,4 @@
+"""Launcher for the application."""
 import os
 import sys
 from secrets import token_hex
@@ -13,7 +14,14 @@ os.environ["SECRET"] = token_hex(32)
 
 if __name__ == "__main__":
 
-    shortcut_path = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "top.gg voter.lnk")
+    shortcut_path = os.path.join(
+        os.environ["APPDATA"],
+        "Microsoft",
+        "Windows",
+        "Start Menu",
+        "Programs",
+        "Startup",
+        "top.gg voter.lnk")
     target = os.path.abspath(sys.argv[0])
     if not os.path.exists(shortcut_path):
         shell = Dispatch('WScript.Shell')

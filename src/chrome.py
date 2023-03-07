@@ -1,4 +1,6 @@
-
+"""
+Module for automated voting using Chrome.
+"""
 import time
 from subprocess import CREATE_NO_WINDOW
 
@@ -6,46 +8,35 @@ import requests
 import undetected_chromedriver as uc
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException,
-                                        StaleElementReferenceException)
+                                        StaleElementReferenceException,
+                                        TimeoutException)
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from src.util import REG, Browser, decrypt_cookie, logger, resource_path
+from src.util import Google, Browser, decrypt_cookie, resource_path
 
 
 class Chrome:
+    """
+    Chrome class for automated voting
+    """
+
     def __init__(self, headless, browser: Browser, bots: list, cookies: list):
         self.headless = headless
         self.bots = bots
         self.cookies = cookies
         self.browser = browser
         self.driver = uc.Chrome(options=self._options(),
-                                desired_capabilities=self._capbilities(),
                                 use_subprocess=True,
-                                browser_executable_path=REG.get_browser(
+                                browser_executable_path=Google.get_browser(
                                     self.browser),
-                                version_main=REG.get_chrome_version(),
+                                version_main=Google.get_version(),
                                 service_creationflags=CREATE_NO_WINDOW)
         self.ignored_exceptions = (
             NoSuchElementException, StaleElementReferenceException)
         self.wait = WebDriverWait(
             self.driver, 3, ignored_exceptions=self.ignored_exceptions)
-
-    def _capbilities(self):
-        prox = Proxy()
-        prox.proxy_type = ProxyType.MANUAL
-        prox.http_proxy = ""
-        prox.socks_proxy = ""
-        prox.ssl_proxy = ""
-
-        cap = DesiredCapabilities.CHROME
-
-        prox.add_to_capabilities(cap)
-
-        return cap
 
     def _options(self):
 
@@ -54,7 +45,7 @@ class Chrome:
         ublock = resource_path("./assets/extensions/ublock/")
 
         options = uc.ChromeOptions()
-        options.binary_location = REG.get_browser(self.browser)
+        options.binary_location = Google.get_browser(self.browser)
         options.add_argument("--disable-popup-blocking")
         options.add_argument("--lang=en-US")
         options.add_argument(f"--load-extension={ublock},{anticaptcha}")
@@ -63,7 +54,7 @@ class Chrome:
         return options
 
     def check_hcaptcha(self):
-
+        """Check if hcaptcha is present."""
         try:
             self.wait_for(
                 "//iframe[@title='Main content of the hCaptcha challenge']")
@@ -71,55 +62,59 @@ class Chrome:
                 By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
             if iframe:
                 time.sleep(5)
-        except:
-            pass
+        except NoSuchElementException:
+            return False
 
-    def wait_for(self, xpath):
+    def wait_for(self, xpath: str):
+        """Wait for element to be clickable.
+
+        Args:
+            xpath (str): Xpath of the element.
+        """
         try:
             self.wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
-        except:
+        except TimeoutException:
             pass
 
     def vote(self):
+        """Vote for the bot."""
         try:
             self.wait_for("//*[contains(text(), 'Vote')]")
             self.driver.find_element(
                 By.XPATH, "//*[contains(text(), 'Vote')]").click()
-            try:
-                self.check_hcaptcha()
-            except Exception as e:
-                print(e)
-                pass
+            self.check_hcaptcha()
             time.sleep(1)
         except ElementClickInterceptedException:
             pass
 
     def can_voted(self, cookie):
+        """Check if the user can vote. Returns a list of urls. """
         urls = []
-        for id in self.bots:
+        for bot_id in self.bots:
             cookies = {"connect.sid": cookie}
-            url = f'https://top.gg/api/client/discord/bot/{id}/vote/check'
-            r = requests.get(url, cookies=cookies)
-            print(f"Bot ID: {id} | Status: {r.json()['status']}")
-            if r.json()['status']:
-                urls.append('https://top.gg/bot/' + id + '/vote')
-            elif r.json()['status'] == "invalid":
-                raise Exception("Cookie Expired!")
+            url = f'https://top.gg/api/client/discord/bot/{bot_id}/vote/check'
+            request = requests.get(url, cookies=cookies, timeout=5)
+
+            if request.json()['status']:
+                urls.append('https://top.gg/bot/' + bot_id + '/vote')
+            elif request.json()['status'] == "invalid":
+                raise ValueError("Cookie Expired!")
         return urls
 
-    def process(self, cookie):
+    def process(self, cookie: str):
+        """Process the voting.
+
+        Args:
+            cookie (str): Cookie of the user.
+        """
         urls = self.can_voted(cookie)
         if len(urls) > 0:
             for i in urls:
                 self.driver.get(i)
                 self.vote()
 
-    def check_if_closed(self):
-        if self.driver.service.process.poll() is not None:
-            self.driver.quit()
-            logger.info("Chrome Closed!")
-
     def run(self):
+        """Run the chrome driver."""
         for cookie in self.cookies:
             cookie = decrypt_cookie(cookie)
             self.driver.get("https://top.gg")
@@ -136,4 +131,5 @@ class Chrome:
         self.driver.quit()
 
     def kill(self):
+        """Kill the chrome driver."""
         self.driver.quit()
