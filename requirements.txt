@@ -1,4 +1,4 @@
-flet == 0.4.2
+flet==0.5.0.dev1252
 pypiwin32 == 223
 pystray == 0.19.4
 APScheduler == 3.10.0

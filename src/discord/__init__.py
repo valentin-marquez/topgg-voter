@@ -1,1 +1,1 @@
-from .getting import bot, is_bot, get_bot
+from .getting import Bot, get_bot

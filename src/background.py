@@ -4,13 +4,14 @@ from src.util import logger
 
 
 class Background(BackgroundScheduler):
+    """Background scheduler with default interval of 60 minutes
+    """
     def __init__(self):
         super().__init__()
         self.default_interval = 60 # minutes
         self.start()
 
     def add_job(self, func, trigger, **kwargs):
-        # Set default interval if not specified
         if trigger == "interval" and "minutes" not in kwargs:
             kwargs["minutes"] = self.default_interval
         super().add_job(func, trigger, **kwargs)

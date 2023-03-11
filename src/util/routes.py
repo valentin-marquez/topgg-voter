@@ -2,12 +2,14 @@
 import os
 import sys
 import winreg
+import zipfile
 from enum import Enum
 
 
 class Browser(Enum):
     """Enum for browser names."""
     CHROME = "chrome.exe"
+
 
 class Google:
     """
@@ -69,3 +71,10 @@ def resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller."""
     base_path = getattr(sys, '_MEIPASS', os.getcwd())
     return os.path.join(base_path, relative_path)
+
+def unzip_ext():
+    """Unzip the extensions .zip"""
+    for file in os.listdir(resource_path("assets/extensions")):
+        if file.endswith(".zip"):
+            with zipfile.ZipFile(resource_path(f"assets/extensions/{file}"), "r") as zip_ref:
+                zip_ref.extractall(resource_path("assets/extensions"))

@@ -1,12 +1,13 @@
-"""module for string operations"""
+# pylint: disable=unused-argument
+"""module for core app"""
 import string
 from datetime import datetime
 
 import flet as ft
 
-from src import Chrome
+from src import Cookie, Chrome
 from src.discord import Bot, get_bot
-from src.util import Browser, encrypt_cookie, logger
+from src.util import Browser, logger
 
 
 class App(ft.UserControl):
@@ -40,7 +41,8 @@ class App(ft.UserControl):
 
         if self.storage.contains_key("cookies"):
             for cookie in self.storage.get("cookies"):
-                self.cookies.append(encrypt_cookie(cookie))
+                self.cookies.append(Cookie(cookie))
+
         self.is_configured = True if self.bots and self.cookies else False
 
     def build(self):
@@ -62,7 +64,7 @@ class App(ft.UserControl):
             padding=15
         )
 
-    def start(self):
+    def start(self, event):
         """
         Start the bot
         """
@@ -137,8 +139,8 @@ class App(ft.UserControl):
             _type_: _description_
         """
         self.bots_listview = ft.ListView(expand=1, spacing=5,
-                                        padding=10, auto_scroll=True,
-                                        col={"xs": 12})
+                                         padding=10, auto_scroll=True,
+                                         height=200, col={"xs": 12})
         for item in items:
             self.bots_listview.controls.append(
                 self.bot_template(item)
@@ -160,15 +162,15 @@ class App(ft.UserControl):
                 ft.Column(
                     controls=[
                         ft.Image(src=item.icon,
-                                fit=ft.ImageFit.COVER,
-                                col={"xs": 3},
-                                border_radius=10),
+                                 fit=ft.ImageFit.COVER,
+                                 col={"xs": 3},
+                                 border_radius=10),
                     ],
                     col={"xs": 2},
                 ),
                 ft.Column(
                     controls=[
-                        ft.Text(f"Bot id: {item.id}", weight=ft.FontWeight.W_300,
+                        ft.Text(f"Bot id: {item.bot_id}", weight=ft.FontWeight.W_300,
                                 size=ft.TextThemeStyle.DISPLAY_SMALL, font_family="Manrope-Medium"),
                         ft.Text(f"Bot Name: {item.name}", weight=ft.FontWeight.W_500,
                                 size=ft.TextThemeStyle.DISPLAY_SMALL, font_family="Manrope-Medium"),
@@ -189,10 +191,23 @@ class App(ft.UserControl):
         )
 
     @classmethod
-    def add_container(cls, component):
+    def add_container(cls, component) -> ft.Card:
+        """Add a container to a component
+
+        Args:
+            component (ft.Control): Component to add the container
+
+        Returns:
+            ft.Card: A material design card
+        """
         return ft.Card(content=ft.Container(component))
 
-    def bots_sections(self):
+    def bots_sections(self) -> ft.Column:
+        """Return a component with the bots section
+
+        Returns:
+            ft.Column: A material design column
+        """
         def numbers_filter(sender: ft.ControlEvent):
             sender.control.value = "".join(
                 [c for c in sender.control.value if c in string.digits])
@@ -212,14 +227,25 @@ class App(ft.UserControl):
             ]
         )
 
-    def cookie_template(self, cookie):
+    def cookie_template(self, cookie:Cookie) -> ft.ResponsiveRow:
+        """View of cookie information in the list
+
+        Args:
+            cookie (str): Cookie string
+
+        Returns:
+            ft.ResponsiveRow: Responsive row with the cookie information
+        """
         return ft.ResponsiveRow(
             col={"xs": 12},
             controls=[
                 ft.Column(
                     controls=[
-                        ft.Text(cookie, weight=ft.FontWeight.W_300,
-                                size=ft.TextThemeStyle.DISPLAY_SMALL),
+                        ft.Container(
+                            ft.Text(cookie.censored(), weight=ft.FontWeight.W_300,
+                                                size=ft.TextThemeStyle.DISPLAY_SMALL),
+                            blur=ft.Blur(4,4, ft.BlurTileMode.CLAMP)
+                        )
                     ],
                     col={"xs": 7},
                 ),
@@ -263,9 +289,10 @@ class App(ft.UserControl):
             return
         if not self.cookie_field.value:
             return
-        self.cookies.append(encrypt_cookie(self.cookie_field.value))
+        current_cookie = Cookie(self.cookie_field.value)
+        self.cookies.append(current_cookie)
         self.cookies_listview.controls.append(
-            self.cookie_template(encrypt_cookie(self.cookie_field.value)))
+            self.cookie_template(current_cookie))
         self.on_update()
         self.update()
 
@@ -296,7 +323,7 @@ class App(ft.UserControl):
                     controls=[
                         self.cookie_field,
                         ft.ElevatedButton(text="Add Cookie",
-                                        on_click=self.add_cookie),
+                                          on_click=self.add_cookie),
                     ]
                 )
             ]
@@ -307,7 +334,7 @@ class App(ft.UserControl):
         handle the update of the data in the storage
         """
         self.storage.set("cookies", self.cookies)
-        self.storage.set("bots", [bot.id for bot in self.bots])
+        self.storage.set("bots", [bot.bot_id for bot in self.bots])
         self.storage.set("last_time_voted", self.last_vote.value)
 
     def on_close(self):
@@ -323,6 +350,6 @@ class App(ft.UserControl):
         logger.info("Saving changes...")
         self.storage.clear()
 
-        self.storage.set("bots", [bot.id for bot in self.bots])
+        self.storage.set("bots", [bot.bot_id for bot in self.bots])
         self.storage.set("cookies", self.cookies)
         self.storage.set("last_time_voted", self.last_vote.value)

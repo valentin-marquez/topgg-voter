@@ -14,7 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from src.util import Google, Browser, decrypt_cookie, resource_path
+from src.cookie import Cookie
+from src.util import Google, Browser, resource_path, can_voted
 
 
 class Chrome:
@@ -22,7 +23,7 @@ class Chrome:
     Chrome class for automated voting
     """
 
-    def __init__(self, headless, browser: Browser, bots: list, cookies: list):
+    def __init__(self, headless, browser: Browser, bots: list, cookies: list[Cookie]):
         self.headless = headless
         self.bots = bots
         self.cookies = cookies
@@ -87,27 +88,13 @@ class Chrome:
         except ElementClickInterceptedException:
             pass
 
-    def can_voted(self, cookie):
-        """Check if the user can vote. Returns a list of urls. """
-        urls = []
-        for bot_id in self.bots:
-            cookies = {"connect.sid": cookie}
-            url = f'https://top.gg/api/client/discord/bot/{bot_id}/vote/check'
-            request = requests.get(url, cookies=cookies, timeout=5)
-
-            if request.json()['status']:
-                urls.append('https://top.gg/bot/' + bot_id + '/vote')
-            elif request.json()['status'] == "invalid":
-                raise ValueError("Cookie Expired!")
-        return urls
-
     def process(self, cookie: str):
         """Process the voting.
 
         Args:
             cookie (str): Cookie of the user.
         """
-        urls = self.can_voted(cookie)
+        urls = can_voted(cookie)
         if len(urls) > 0:
             for i in urls:
                 self.driver.get(i)
@@ -116,7 +103,7 @@ class Chrome:
     def run(self):
         """Run the chrome driver."""
         for cookie in self.cookies:
-            cookie = decrypt_cookie(cookie)
+            cookie = cookie.cookie
             self.driver.get("https://top.gg")
             self.driver.add_cookie(
                 {

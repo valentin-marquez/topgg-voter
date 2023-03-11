@@ -29,34 +29,41 @@ class Bot:
         if self.icon is None:
             self.icon = "https://discord.com/assets/322c936a8c8be1b803cd94861bdfa868.png"
 
-        if self.is_bot == False:
+        if self.is_bot is False:
             raise ValueError("This is not a bot.")
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json) -> "Bot":
+        """
+        Creates a Bot object from a json.
+
+        Args:
+            json (dict): The json to create the object from.
+
+        Returns:
+            Bot: The created Bot object.
+        """
         try:
             return cls(json["id"], json["name"], json["icon"], json["is_bot"])
-        except KeyError as e:
-            logger.error(f"Error: {e}")
+        except KeyError:
+            return cls(json["id"], json["name"], None, json["is_bot"])
 
     def __repr__(self) -> str:
-        return f"Bot({self.id}, {self.name}, {self.icon}, {self.is_bot})"
+        return f"Bot({self.bot_id}, {self.name}, {self.icon}, {self.is_bot})"
 
-def is_bot(json):
-    return False if "code" in json else True
+def get_bot(bot_id: int) -> Bot:
+    """
+    Gets a bot from the Discord API.
 
-
-def get_bot(id: int) -> Bot:
+    Args:
+        bot_id (int): The bot's ID.
+    """
     try:
-        r = requests.get(
-            f"https://discordlookup.mesavirep.xyz/v1/application/{id}")
-        if r.status_code == 200:
-            json = r.json()
-            json["is_bot"] = is_bot(json)
+        request = requests.get(
+            f"https://discordlookup.mesavirep.xyz/v1/application/{bot_id}", timeout=5)
+        if request.status_code == 200:
+            json = request.json()
+            json["is_bot"] = False if "code" in json else True
             return Bot.from_json(json)
     except AttributeError:
         logger.error("Error: Connection error")
-
-
-if __name__ == "__main__":
-    bot = get_bot(432610292342587392)

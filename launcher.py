@@ -1,7 +1,7 @@
 """Launcher for the application."""
 import os
 import sys
-from secrets import token_hex
+import secrets
 
 import flet as ft
 from win32com.client import Dispatch
@@ -10,7 +10,7 @@ from src.main import main
 from src.util.routes import resource_path
 
 os.environ["VERSION"] = "v1.1.0"
-os.environ["SECRET"] = token_hex(32)
+os.environ["SECRET"] = secrets.token_hex(16)
 
 if __name__ == "__main__":
 
