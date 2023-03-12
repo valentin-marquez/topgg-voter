@@ -1,8 +1,6 @@
 """
 Cookie class for encrypting and decrypting cookies.
 """
-import os
-
 
 class Cookie:
     """

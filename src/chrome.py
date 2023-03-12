@@ -2,20 +2,21 @@
 Module for automated voting using Chrome.
 """
 import time
+import os
 from subprocess import CREATE_NO_WINDOW
 
-import requests
 import undetected_chromedriver as uc
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException,
                                         StaleElementReferenceException,
-                                        TimeoutException)
+                                        TimeoutException,
+                                        WebDriverException)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from src.cookie import Cookie
-from src.util import Google, Browser, resource_path, can_voted
+from src.util import Google, Browser, resource_path, can_voted, logger, delete_chromedriver
 
 
 class Chrome:
@@ -75,7 +76,7 @@ class Chrome:
         try:
             self.wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
         except TimeoutException:
-            pass
+            logger.info("Element not found.")
 
     def vote(self):
         """Vote for the bot."""
@@ -86,7 +87,7 @@ class Chrome:
             self.check_hcaptcha()
             time.sleep(1)
         except ElementClickInterceptedException:
-            pass
+            logger.info("Already voted.")
 
     def process(self, cookie: str):
         """Process the voting.
@@ -94,29 +95,45 @@ class Chrome:
         Args:
             cookie (str): Cookie of the user.
         """
-        urls = can_voted(cookie)
-        if len(urls) > 0:
-            for i in urls:
-                self.driver.get(i)
-                self.vote()
+        try:
+
+            urls = can_voted(cookie, self.bots)
+            if len(urls) > 0:
+                for i in urls:
+                    self.driver.get(i)
+                    self.vote()
+        except WebDriverException:
+            self.kill()
+            logger.error("Chrome driver already closed.")
 
     def run(self):
         """Run the chrome driver."""
-        for cookie in self.cookies:
-            cookie = cookie.cookie
-            self.driver.get("https://top.gg")
-            self.driver.add_cookie(
-                {
+        try:
+            for cookie in self.cookies:
+                self.driver.get("https://top.gg")
+                self.driver.add_cookie(
+                    {
 
-                    'name': 'connect.sid',
-                    'value': cookie,
-                }
-            )
-            self.driver.refresh()
-            self.process(cookie)
-            self.driver.delete_all_cookies()
-        self.driver.quit()
+                        'name': 'connect.sid',
+                        'value': cookie.cookie,
+                    }
+                )
+                self.driver.refresh()
+                self.process(cookie.cookie)
+                self.driver.delete_all_cookies()
+        except WebDriverException:
+            self.kill()
+            logger.error("Chrome driver already closed.")
 
     def kill(self):
         """Kill the chrome driver."""
-        self.driver.quit()
+        try:
+            self.driver.quit()
+            os.kill(self.driver.browser_pid, 15)
+            delete_chromedriver()
+        except WebDriverException:
+            logger.error("Chrome driver already closed.")
+        except PermissionError:
+            logger.error("Chrome driver already closed.")
+        except OSError:
+            logger.error("Chrome driver already killed.")

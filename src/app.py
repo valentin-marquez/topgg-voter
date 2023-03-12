@@ -6,7 +6,7 @@ from datetime import datetime
 import flet as ft
 
 from src import Cookie, Chrome
-from src.discord import Bot, get_bot
+from src.discord import Bot
 from src.util import Browser, logger
 
 
@@ -22,7 +22,6 @@ class App(ft.UserControl):
         self.chromes: list[Chrome] = []
         self.bots: list[Bot] = []
         self.cookies = []
-        self.is_configured = False
 
         # Components
         self.bots_listview = None
@@ -30,20 +29,6 @@ class App(ft.UserControl):
         self.start_btn = None
         self.bot_field = None
         self.cookie_field = None
-
-    def init(self):
-        """
-        Init the app
-        """
-        self.bots = [get_bot(id) for id in self.storage.get(
-            "bots")] if self.storage.contains_key("bots") else []
-        self.cookies = []
-
-        if self.storage.contains_key("cookies"):
-            for cookie in self.storage.get("cookies"):
-                self.cookies.append(Cookie(cookie))
-
-        self.is_configured = True if self.bots and self.cookies else False
 
     def build(self):
         return ft.Container(
@@ -68,23 +53,23 @@ class App(ft.UserControl):
         """
         Start the bot
         """
-        if self.bots and self.cookies and not self.chromes:
+        if self.bots and self.cookies:
             self.start_btn.content.content.text = "STARTED..."
             self.start_btn.disabled = True
             self.update()
             driver = Chrome(True, Browser.CHROME,
-                            self.storage.get("bots"), self.cookies)
+                            Bot.get_bots_id(self.bots), self.cookies)
             driver.run()
             self.chromes.append(driver)
 
             self.storage.set("last_time_voted",
-                             datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                            datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
             self.last_vote.value = self.storage.get('last_time_voted')
             self.start_btn.content.content.text = "VOTE"
             self.start_btn.disabled = False
             self.update()
         else:
-            logger.error("No bots or cookies selected")
+            logger.error("You need to add at least one bot and one cookie")
 
     def start_button(self) -> ft.Card:
         """Return a component with a button to start the bot
@@ -93,7 +78,7 @@ class App(ft.UserControl):
         """
         self.start_btn = self.add_container(ft.TextButton(
             "VOTE", on_click=self.start, expand=1, height=40, width=100))
-        if self.is_configured:
+        if self.bots and self.cookies:
             self.start_btn.content.content.text = "STARTED..."
             self.start_btn.disabled = True
         return self.start_btn
@@ -119,7 +104,7 @@ class App(ft.UserControl):
         try:
 
             if self.bot_field.value not in self.bots and self.bot_field.value != "":
-                bot = get_bot(int(self.bot_field.value))
+                bot = Bot.from_id(self.bot_field.value)
                 self.bots.append(bot)
                 self.bots_listview.controls.append(self.bot_template(bot))
                 self.on_update()
@@ -227,7 +212,7 @@ class App(ft.UserControl):
             ]
         )
 
-    def cookie_template(self, cookie:Cookie) -> ft.ResponsiveRow:
+    def cookie_template(self, cookie: Cookie) -> ft.ResponsiveRow:
         """View of cookie information in the list
 
         Args:
@@ -243,8 +228,8 @@ class App(ft.UserControl):
                     controls=[
                         ft.Container(
                             ft.Text(cookie.censored(), weight=ft.FontWeight.W_300,
-                                                size=ft.TextThemeStyle.DISPLAY_SMALL),
-                            blur=ft.Blur(4,4, ft.BlurTileMode.CLAMP)
+                                    size=ft.TextThemeStyle.DISPLAY_SMALL),
+                            blur=ft.Blur(4, 4, ft.BlurTileMode.CLAMP)
                         )
                     ],
                     col={"xs": 7},
@@ -329,13 +314,32 @@ class App(ft.UserControl):
             ]
         )
 
+    def on_start(self, storage):
+        """
+        handle the start of the app
+        """
+        logger.info("start services...")
+        self.storage = storage
+        self.cookies = [Cookie(cookie) for cookie in storage.get("cookies")]\
+            if storage.contains_key("cookies") else []
+        self.last_vote = storage.get("last_time_voted")
+        self.bots = [Bot.from_id(id) for id in storage.get("bots")]\
+            if storage.contains_key("bots") else []
+        self.chromes = []
+
+    def save(self):
+        """
+        save the data in the storage
+        """
+        self.storage.set("bots", [bot.bot_id for bot in self.bots])
+        self.storage.set("cookies", [cookie.cookie for cookie in self.cookies])
+        self.storage.set("last_time_voted", self.last_vote.value)
+
     def on_update(self):
         """
         handle the update of the data in the storage
         """
-        self.storage.set("cookies", self.cookies)
-        self.storage.set("bots", [bot.bot_id for bot in self.bots])
-        self.storage.set("last_time_voted", self.last_vote.value)
+        self.save()
 
     def on_close(self):
         """
@@ -350,6 +354,4 @@ class App(ft.UserControl):
         logger.info("Saving changes...")
         self.storage.clear()
 
-        self.storage.set("bots", [bot.bot_id for bot in self.bots])
-        self.storage.set("cookies", self.cookies)
-        self.storage.set("last_time_voted", self.last_vote.value)
+        self.save()

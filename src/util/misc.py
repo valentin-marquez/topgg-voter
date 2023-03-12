@@ -5,6 +5,8 @@ import os
 
 import requests
 
+from src.util.logger import logger
+
 
 def get_version() -> str:
     """
@@ -27,7 +29,8 @@ def update_available() -> bool:
     """
     return get_version() != last_release()
 
-def can_voted(cookie:str, bots:list) -> list[str]:
+
+def can_voted(cookie: str, bots: list) -> list[str]:
     """Check if the user can vote. Returns a list of urls. """
     urls = []
     for bot_id in bots:
@@ -40,3 +43,14 @@ def can_voted(cookie:str, bots:list) -> list[str]:
         elif request.json()['status'] == "invalid":
             raise ValueError("Cookie Expired!")
     return urls
+
+
+def delete_chromedriver() -> None:
+    """
+    Deletes the chromedriver.exe file.
+    """
+    try:
+        if os.path.exists(os.path.join(os.getenv("APPDATA"), "undetected_chromedriver")):
+            os.remove(os.path.join(os.getenv("APPDATA"), "undetected_chromedriver"))
+    except OSError:
+        logger.error("Chromedriver.exe already deleted.")

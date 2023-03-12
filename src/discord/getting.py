@@ -48,22 +48,33 @@ class Bot:
         except KeyError:
             return cls(json["id"], json["name"], None, json["is_bot"])
 
+    @classmethod
+    def from_id(cls, bot_id: int) -> "Bot":
+        """
+        Creates a Bot object from an ID.
+
+        Args:
+            bot_id (int): The bot's ID.
+
+        Returns:
+            Bot: The created Bot object.
+        """
+        try:
+            request = requests.get(
+                f"https://discordlookup.mesavirep.xyz/v1/application/{bot_id}", timeout=5)
+            if request.status_code == 200:
+                json = request.json()
+                json["is_bot"] = False if "code" in json else True
+                return cls.from_json(json)
+        except AttributeError:
+            logger.error("Error: Connection error")
+
+
     def __repr__(self) -> str:
         return f"Bot({self.bot_id}, {self.name}, {self.icon}, {self.is_bot})"
+    
 
-def get_bot(bot_id: int) -> Bot:
-    """
-    Gets a bot from the Discord API.
-
-    Args:
-        bot_id (int): The bot's ID.
-    """
-    try:
-        request = requests.get(
-            f"https://discordlookup.mesavirep.xyz/v1/application/{bot_id}", timeout=5)
-        if request.status_code == 200:
-            json = request.json()
-            json["is_bot"] = False if "code" in json else True
-            return Bot.from_json(json)
-    except AttributeError:
-        logger.error("Error: Connection error")
+    @classmethod
+    def get_bots_id(cls, bot:list["Bot"]) -> list[int]:
+        """Get a list of bot's id"""
+        return [bot.bot_id for bot in bot]

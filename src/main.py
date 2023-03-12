@@ -25,13 +25,15 @@ def open_app(icon, query):
     """Open the application."""
     tray.visible = False
     P.window_skip_task_bar = False
-
-    P.window_always_on_top = True
+    P.window_to_front()
     P.update()
 
 
-def check_vote(icon, query, cookies, bots):
+def check_vote(icon, query, cookies=None, bots= None):
     """Check if the user can vote."""
+
+    if cookies is None or bots is None:
+        return
     vote = []
     for cookie in cookies:
         vote += can_voted(cookie, bots)
@@ -41,7 +43,6 @@ def check_vote(icon, query, cookies, bots):
 
 menu = pystray.Menu(
     pystray.MenuItem("Open", open_app, default=True),
-    pystray.MenuItem("Vote", check_vote),
     pystray.MenuItem("Exit", exit_app)
 )
 tray = Tray(menu=menu)
@@ -93,7 +94,7 @@ def main(page: ft.Page):
         last_time_voted = page.client_storage.get("last_time_voted")
     else:
         last_time_voted = "Never"
-    voter.init()
+    voter.on_start(page.client_storage)
     scheduler.add_job(check_vote, 'interval', minutes=60, args=[tray, None])
     widthsrc = page.width
 
@@ -139,4 +140,4 @@ def main(page: ft.Page):
     page.update()
     cookies = page.client_storage.get("cookies")
     bots = page.client_storage.get("bots")
-    check_vote(tray, None, cookies, bots)  # check_vote
+    check_vote(tray, None, cookies, bots)
