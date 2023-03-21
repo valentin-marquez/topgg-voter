@@ -5,8 +5,8 @@ from datetime import datetime
 
 import flet as ft
 
-from src import Cookie, Chrome
-from src.discord import Bot
+from src import Chrome
+from src.discord import Bot, Tk
 from src.util import Browser, logger
 
 
@@ -21,14 +21,14 @@ class App(ft.UserControl):
         self.last_vote = None
         self.chromes: list[Chrome] = []
         self.bots: list[Bot] = []
-        self.cookies = []
+        self.tokens = []
 
         # Components
         self.bots_listview = None
-        self.cookies_listview = None
+        self.tokens_listview = None
         self.start_btn = None
         self.bot_field = None
-        self.cookie_field = None
+        self.token_field = None
 
     def build(self):
         return ft.Container(
@@ -39,10 +39,10 @@ class App(ft.UserControl):
                             style=ft.TextThemeStyle.HEADLINE_MEDIUM, weight=ft.FontWeight.W_500),
                     self.bots_sections(),
                     self.bots_lv(self.bots),
-                    ft.Text("Cookies", text_align="left", font_family="Manrope-Medium",
+                    ft.Text("Tokens", text_align="left", font_family="Manrope-Medium",
                             style=ft.TextThemeStyle.HEADLINE_MEDIUM, weight=ft.FontWeight.W_500),
-                    self.cookies_sections(),
-                    self.cookies_lv(self.cookies),
+                    self.tokens_sections(),
+                    self.tokens_lv(self.tokens),
                     self.start_button()
                 ],
             ),
@@ -53,23 +53,23 @@ class App(ft.UserControl):
         """
         Start the bot
         """
-        if self.bots and self.cookies:
+        if self.bots and self.tokens:
             self.start_btn.content.content.text = "STARTED..."
             self.start_btn.disabled = True
             self.update()
             driver = Chrome(True, Browser.CHROME,
-                            Bot.get_bots_id(self.bots), self.cookies)
+                            Bot.get_bots_id(self.bots), self.tokens)
             driver.run()
             self.chromes.append(driver)
 
             self.storage.set("last_time_voted",
-                            datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                             datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
             self.last_vote.value = self.storage.get('last_time_voted')
             self.start_btn.content.content.text = "VOTE"
             self.start_btn.disabled = False
             self.update()
         else:
-            logger.error("You need to add at least one bot and one cookie")
+            logger.error("You need to add at least one bot and one token")
 
     def start_button(self) -> ft.Card:
         """Return a component with a button to start the bot
@@ -78,7 +78,7 @@ class App(ft.UserControl):
         """
         self.start_btn = self.add_container(ft.TextButton(
             "VOTE", on_click=self.start, expand=1, height=40, width=100))
-        if self.bots and self.cookies:
+        if self.bots and self.tokens:
             self.start_btn.content.content.text = "STARTED..."
             self.start_btn.disabled = True
         return self.start_btn
@@ -212,14 +212,14 @@ class App(ft.UserControl):
             ]
         )
 
-    def cookie_template(self, cookie: Cookie) -> ft.ResponsiveRow:
-        """View of cookie information in the list
+    def token_template(self, token: Tk) -> ft.ResponsiveRow:
+        """View of token information in the list
 
         Args:
-            cookie (str): Cookie string
+            token (Token): Token
 
         Returns:
-            ft.ResponsiveRow: Responsive row with the cookie information
+            ft.ResponsiveRow: Responsive row with the token information
         """
         return ft.ResponsiveRow(
             col={"xs": 12},
@@ -227,7 +227,7 @@ class App(ft.UserControl):
                 ft.Column(
                     controls=[
                         ft.Container(
-                            ft.Text(cookie.censored(), weight=ft.FontWeight.W_300,
+                            ft.Text(token.censored(), weight=ft.FontWeight.W_300,
                                     size=ft.TextThemeStyle.DISPLAY_SMALL),
                             blur=ft.Blur(4, 4, ft.BlurTileMode.CLAMP)
                         )
@@ -240,75 +240,75 @@ class App(ft.UserControl):
                     alignment=ft.MainAxisAlignment.CENTER,
                     controls=[
                         ft.ElevatedButton(
-                            text="Remove", on_click=self.remove_cookie, data=cookie),
+                            text="Remove", on_click=self.remove_token, data=token),
                     ],
                     col={"xs": 5},
                 )
             ]
         )
 
-    def cookies_lv(self, items: list) -> ft.ListView:
-        """Return a listview with the cookies
+    def tokens_lv(self, items: list) -> ft.ListView:
+        """Return a listview with the tokens
 
         Args:
-            items (list): Cookies list
+            items (list): Tokens list
 
         Returns:
-            ft.ListView: a listview with the cookies
+            ft.ListView: a listview with the tokens
         """
-        self.cookies_listview = ft.ListView(expand=1, spacing=5,
-                                            padding=10, height=150)
+        self.tokens_listview = ft.ListView(expand=1, spacing=5,
+                                           padding=10, height=150)
         for item in items:
-            self.cookies_listview.controls.append(
-                self.cookie_template(item)
+            self.tokens_listview.controls.append(
+                self.token_template(item)
             )
-        return self.cookies_listview
+        return self.tokens_listview
 
-    def add_cookie(self, event: ft.ControlEvent):
-        """ Add a cookie to the list
-
-        Args:
-            sender (ft.ControlEvent): Class that contains the control that triggered the event
-        """
-        if self.cookie_field.value in self.cookies:
-            return
-        if not self.cookie_field.value:
-            return
-        current_cookie = Cookie(self.cookie_field.value)
-        self.cookies.append(current_cookie)
-        self.cookies_listview.controls.append(
-            self.cookie_template(current_cookie))
-        self.on_update()
-        self.update()
-
-    def remove_cookie(self, sender: ft.ControlEvent):
-        """Remove a cookie from the list
+    def add_token(self, event: ft.ControlEvent):
+        """ Add a tokens to the list
 
         Args:
             sender (ft.ControlEvent): Class that contains the control that triggered the event
         """
-        self.cookies_listview.controls.pop(
-            self.cookies.index(sender.control.data))
-        self.cookies.remove(sender.control.data)
+        if self.token_field.value in self.tokens:
+            return
+        if not self.token_field.value:
+            return
+        current_token = Tk(self.token_field.value)
+        self.tokens.append(current_token)
+        self.tokens_listview.controls.append(
+            self.token_template(current_token))
         self.on_update()
         self.update()
 
-    def cookies_sections(self) -> ft.Column:
-        """Cookie section
+    def remove_token(self, sender: ft.ControlEvent):
+        """Remove a token from the list
+
+        Args:
+            sender (ft.ControlEvent): Class that contains the control that triggered the event
+        """
+        self.tokens_listview.controls.pop(
+            self.tokens.index(sender.control.data))
+        self.tokens.remove(sender.control.data)
+        self.on_update()
+        self.update()
+
+    def tokens_sections(self) -> ft.Column:
+        """Token section
 
         Returns:
-            ft.Column: Cookie section
+            ft.Column: Token section
         """
-        self.cookie_field = ft.TextField(
-            hint_text="Paste your cookie here", height=60)
+        self.token_field = ft.TextField(
+            hint_text="Paste your token here", height=60)
 
         return ft.Column(
             controls=[
                 ft.ResponsiveRow(
                     controls=[
-                        self.cookie_field,
-                        ft.ElevatedButton(text="Add Cookie",
-                                          on_click=self.add_cookie),
+                        self.token_field,
+                        ft.ElevatedButton(text="Add Token",
+                                          on_click=self.add_token),
                     ]
                 )
             ]
@@ -320,8 +320,8 @@ class App(ft.UserControl):
         """
         logger.info("start services...")
         self.storage = storage
-        self.cookies = [Cookie(cookie) for cookie in storage.get("cookies")]\
-            if storage.contains_key("cookies") else []
+        self.tokens = [Tk(token) for token in storage.get("tokens")]\
+            if storage.contains_key("tokens") else []
         self.last_vote = storage.get("last_time_voted")
         self.bots = [Bot.from_id(id) for id in storage.get("bots")]\
             if storage.contains_key("bots") else []
@@ -332,7 +332,7 @@ class App(ft.UserControl):
         save the data in the storage
         """
         self.storage.set("bots", [bot.bot_id for bot in self.bots])
-        self.storage.set("cookies", [cookie.cookie for cookie in self.cookies])
+        self.storage.set("tokens", [token.value for token in self.tokens])
         self.storage.set("last_time_voted", self.last_vote.value)
 
     def on_update(self):

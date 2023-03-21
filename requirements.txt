@@ -1,5 +1,6 @@
 flet==0.5.0.dev1252
 pypiwin32 == 223
+ujson == 5.7.0
 pystray == 0.19.4
 APScheduler == 3.10.0
 requests == 2.28.2

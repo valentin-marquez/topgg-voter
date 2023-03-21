@@ -72,9 +72,21 @@ def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.getcwd())
     return os.path.join(base_path, relative_path)
 
-def unzip_ext():
+
+def unzip_extensions() -> bool:
     """Unzip the extensions .zip"""
+
+    if not os.path.exists(os.path.join(os.environ["APPDATA"], "Top.gg Voter", "extensions")):
+        os.makedirs(os.path.join(
+            os.environ["APPDATA"], "Top.gg Voter", "extensions"))
+    else:
+        return False
     for file in os.listdir(resource_path("assets/extensions")):
         if file.endswith(".zip"):
             with zipfile.ZipFile(resource_path(f"assets/extensions/{file}"), "r") as zip_ref:
-                zip_ref.extractall(resource_path("assets/extensions"))
+                zip_ref.extractall(os.path.join(
+                    os.environ["APPDATA"], "Top.gg Voter", "extensions", file[:-4]))
+    return True
+
+def extension_path(extension: str) -> str:
+    return os.path.join(os.environ["APPDATA"], "Top.gg Voter", "extensions", extension)
