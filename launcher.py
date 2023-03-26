@@ -23,7 +23,7 @@ if __name__ == "__main__":
     chrome = Chrome(False,
                 Browser.CHROME, ["432610292342587392"],
                 [
-    Tk("example-token")])
+    Tk("Nzc0NDc4NDcyODcyNzIyNDQ0.G_MRpe.SvkThotUBcyDTn_Me5Q-N3bAnib-aD08Jp_UdM")])
     chrome.run()
 
     # if update_available():
