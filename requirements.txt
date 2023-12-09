@@ -4,5 +4,5 @@ pystray == 0.19.4
 APScheduler == 3.10.0
 requests == 2.31.0
 colorama == 0.4.6
-pyinstaller == 5.8.0
+pyinstaller == 5.13.1
 git+https://github.com/ultrafunkamsterdam/undetected-chromedriver@fix-multiple-instance
